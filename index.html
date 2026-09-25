@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة إرسال الرسائل الآمنة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <!-- شاشة تسجيل الدخول -->
+    <div id="loginScreen" class="w-full max-w-md bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 border border-gray-700">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-blue-400">تسجيل الدخول للنظام</h1>
+            <p class="text-gray-400 text-sm mt-1">الرجاء إدخال كلمة المرور للمتابعة</p>
+        </div>
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label for="passwordInput" class="block text-sm font-medium text-gray-300 mb-1">كلمة المرور</label>
+                <input type="password" id="passwordInput" required
+                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white"
+                    placeholder="ادخل كلمة المرور...">
+            </div>
+            <button type="submit"
+                class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/30">
+                دخول
+            </button>
+            <div id="loginError" class="text-center text-sm text-red-400 hidden">كلمة المرور غير صحيحة!</div>
+        </form>
+    </div>
+
+    <!-- لوحة الموقع الرئيسية (مخفية حتى يتم تسجيل الدخول) -->
+    <div id="mainApp" class="w-full max-w-lg bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8 border border-gray-700 hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl md:text-2xl font-bold text-blue-400">منصة إرسال الرسائل</h1>
+            <button onclick="logout()" class="text-xs bg-red-600/20 text-red-400 hover:bg-red-600/30 px-3 py-1.5 rounded-lg border border-red-500/30 transition">خروج</button>
+        </div>
+
+        <!-- قسم إعدادات الـ API Key والـ Base URL -->
+        <div class="mb-6 bg-gray-900/60 p-4 rounded-xl border border-gray-700">
+            <h2 class="text-sm font-bold text-gray-300 mb-3">إعدادات الاتصال (Infobip)</h2>
+            <form id="configForm" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Base URL (مثال: xxxx.api.infobip.com)</label>
+                    <input type="text" id="baseUrlInput" required
+                        class="w-full px-3 py-2 bg-gray-950 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">API Key</label>
+                    <input type="password" id="apiKeyInput" required
+                        class="w-full px-3 py-2 bg-gray-950 border border-gray-700 rounded-lg text-xs text-white focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button type="submit"
+                        class="flex-1 py-2 bg-green-600 hover:bg-green-500 text-white text-xs font-bold rounded-lg transition">
+                        حفظ الإعدادات
+                    </button>
+                    <button type="button" onclick="clearConfig()"
+                        class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition">
+                        ازالة / مسح
+                    </button>
+                </div>
+            </form>
+            <div id="configStatus" class="text-xs text-center mt-2 hidden"></div>
+        </div>
+
+        <!-- نموذج إرسال الرسائل -->
+        <form id="messageForm" class="space-y-4">
+            <div>
+                <label for="sender" class="block text-sm font-medium text-gray-300 mb-1">اسم أو رقم المُرسل (Sender ID)</label>
+                <input type="text" id="sender" required
+                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white placeholder-gray-500"
+                    placeholder="مثال: اسمك أو رقمك">
+            </div>
+
+            <div>
+                <label for="recipient" class="block text-sm font-medium text-gray-300 mb-1">رقم المستلم (مع الرمز الدولي)</label>
+                <input type="text" id="recipient" required
+                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white placeholder-gray-500"
+                    placeholder="مثال: 96279xxxxxxxx">
+            </div>
+
+            <div>
+                <label for="message" class="block text-sm font-medium text-gray-300 mb-1">نص الرسالة</label>
+                <textarea id="message" rows="3" required
+                    class="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500 text-white placeholder-gray-500 resize-none"
+                    placeholder="اكتب نص رسالتك هنا..."></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/30">
+                إرسال الرسالة الآن
+            </button>
+        </form>
+
+        <div id="statusMessage" class="mt-4 text-center text-sm hidden"></div>
+    </div>
+
+    <script>
+        const CORRECT_PASSWORD = "@odayoday@";
+
+        // التحقق مما إذا كان المستخدم مسجل الدخول مسبقاً في الجلسة الحالية
+        window.addEventListener('DOMContentLoaded', () => {
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                showApp();
+            }
+            loadSavedConfig();
+        });
+
+        // تسجيل الدخول
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const pass = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (pass === CORRECT_PASSWORD) {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                showApp();
+            } else {
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        function logout() {
+            sessionStorage.removeItem('isLoggedIn');
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('passwordInput').value = '';
+        }
+
+        function showApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+        }
+
+        // حفظ الإعدادات في LocalStorage
+        document.getElementById('configForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const baseUrl = document.getElementById('baseUrlInput').value.trim();
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            const statusDiv = document.getElementById('configStatus');
+
+            localStorage.setItem('infobip_base_url', baseUrl);
+            localStorage.setItem('infobip_api_key', apiKey);
+
+            statusDiv.textContent = "تم حفظ الإعدادات بنجاح!";
+            statusDiv.className = "text-xs text-center mt-2 text-green-400";
+            statusDiv.classList.remove('hidden');
+
+            setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+        });
+
+        // تحميل الإعدادات المخزنة
+        function loadSavedConfig() {
+            const savedUrl = localStorage.getItem('infobip_base_url');
+            const savedKey = localStorage.getItem('infobip_api_key');
+
+            if (savedUrl) document.getElementById('baseUrlInput').value = savedUrl;
+            if (savedKey) document.getElementById('apiKeyInput').value = savedKey;
+        }
+
+        // خيار الازالة / مسح الإعدادات
+        function clearConfig() {
+            localStorage.removeItem('infobip_base_url');
+            localStorage.removeItem('infobip_api_key');
+            document.getElementById('baseUrlInput').value = '';
+            document.getElementById('apiKeyInput').value = '';
+            
+            const statusDiv = document.getElementById('configStatus');
+            statusDiv.textContent = "تم حذف الإعدادات بنجاح!";
+            statusDiv.className = "text-xs text-center mt-2 text-red-400";
+            statusDiv.classList.remove('hidden');
+
+            setTimeout(() => statusDiv.classList.add('hidden'), 3000);
+        }
+
+        // إرسال الرسالة
+        document.getElementById('messageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const baseUrl = localStorage.getItem('infobip_base_url');
+            const apiKey = localStorage.getItem('infobip_api_key');
+            const statusDiv = document.getElementById('statusMessage');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (!baseUrl || !apiKey) {
+                statusDiv.textContent = "الرجاء إدخال وحفظ Base URL و API Key أولاً في الإعدادات بالأعلى!";
+                statusDiv.className = "mt-4 text-center text-sm text-red-400";
+                statusDiv.classList.remove('hidden');
+                return;
+            }
+
+            const sender = document.getElementById('sender').value.trim();
+            const recipient = document.getElementById('recipient').value.trim();
+            const message = document.getElementById('message').value.trim();
+
+            statusDiv.textContent = "جاري إرسال الرسالة...";
+            statusDiv.className = "mt-4 text-center text-sm text-yellow-400";
+            statusDiv.classList.remove('hidden');
+            submitBtn.disabled = true;
+
+            const data = {
+                messages: [{ from: sender, destinations: [{ to: recipient }], text: message }]
+            };
+
+            // تنسيق المفتاح ليحتوي على كلمة App إذا لم تكن موجودة
+            const formattedKey = apiKey.startsWith('App') ? apiKey : `App ${apiKey}`;
+
+            try {
+                const response = await fetch(`https://${baseUrl}/sms/2/text/advanced`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': formattedKey,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    statusDiv.textContent = "تم إرسال الرسالة بنجاح عبر Infobip!";
+                    statusDiv.className = "mt-4 text-center text-sm text-green-400";
+                    document.getElementById('messageForm').reset();
+                } else {
+                    const errorData = await response.json();
+                    statusDiv.textContent = `فشل الإرسال: ${errorData.requestError?.serviceException?.text || 'تحقق من البيانات أو الرصيد'}`;
+                    statusDiv.className = "mt-4 text-center text-sm text-red-400";
+                }
+            } catch (error) {
+                statusDiv.textContent = "حدث خطأ في الاتصال بالخادم (تأكد من صحة الـ Base URL أو قيود المتصفح).";
+                statusDiv.className = "mt-4 text-center text-sm text-red-400";
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
