@@ -93,6 +93,15 @@
                     placeholder="اكتب نص رسالتك هنا..."></textarea>
             </div>
 
+            <!-- خيار رسالة فلاش -->
+            <div class="flex items-center gap-2 bg-gray-900/40 p-3 rounded-xl border border-gray-700/60">
+                <input type="checkbox" id="flashCheckbox"
+                    class="w-4 h-4 text-blue-600 bg-gray-900 border-gray-700 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer">
+                <label for="flashCheckbox" class="text-sm text-gray-300 cursor-pointer select-none">
+                    إرسال كـ <span class="text-blue-400 font-semibold">رسالة فلاش (Flash SMS)</span> تظهر مباشرة على شاشة الهاتف
+                </label>
+            </div>
+
             <button type="submit" id="submitBtn"
                 class="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition shadow-lg shadow-blue-600/30">
                 إرسال الرسالة الآن
@@ -199,14 +208,29 @@
             const sender = document.getElementById('sender').value.trim();
             const recipient = document.getElementById('recipient').value.trim();
             const message = document.getElementById('message').value.trim();
+            const isFlash = document.getElementById('flashCheckbox').checked;
 
             statusDiv.textContent = "جاري إرسال الرسالة...";
             statusDiv.className = "mt-4 text-center text-sm text-yellow-400";
             statusDiv.classList.remove('hidden');
             submitBtn.disabled = true;
 
+            // إعداد البيانات بناءً على حالة الفلاش
+            const messageObj = {
+                from: sender,
+                destinations: [{ to: recipient }],
+                text: message
+            };
+
+            // إذا تم تفعيل خيار الفلاش، نضيف الخاصية المطلوبة لـ Infobip
+            if (isFlash) {
+                messageObj.options = {
+                    flash: true
+                };
+            }
+
             const data = {
-                messages: [{ from: sender, destinations: [{ to: recipient }], text: message }]
+                messages: [messageObj]
             };
 
             // تنسيق المفتاح ليحتوي على كلمة App إذا لم تكن موجودة
@@ -224,7 +248,7 @@
                 });
 
                 if (response.ok) {
-                    statusDiv.textContent = "تم إرسال الرسالة بنجاح عبر Infobip!";
+                    statusDiv.textContent = isFlash ? "تم إرسال رسالة الفلاش بنجاح!" : "تم إرسال الرسالة بنجاح عبر Infobip!";
                     statusDiv.className = "mt-4 text-center text-sm text-green-400";
                     document.getElementById('messageForm').reset();
                 } else {
